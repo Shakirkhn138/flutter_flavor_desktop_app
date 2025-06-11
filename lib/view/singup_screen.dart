@@ -54,6 +54,7 @@ class _SingUpScreenState extends State<SingUpScreen> {
                             _nameController,
                             'Name',
                             'Enter your name',
+                            NameChangedEvent
                           ),
                           SizedBox(height: 10),
                           _buildTextField(
@@ -61,6 +62,7 @@ class _SingUpScreenState extends State<SingUpScreen> {
                             _emailController,
                             'Email',
                             'Enter your email',
+                            EmailChangedEvent,
                           ),
                           SizedBox(height: 10),
                           _buildTextField(
@@ -68,6 +70,7 @@ class _SingUpScreenState extends State<SingUpScreen> {
                             _passwordController,
                             'Password',
                             'Create a password',
+                            PasswordChangedEvent,
                           ),
 
                           Padding(
@@ -106,6 +109,7 @@ Widget _buildTextField(
   controller,
   String title,
   String text,
+    event,
 ) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +135,7 @@ Widget _buildTextField(
             ),
           ),
           onChanged: (value) =>
-              context.read<SignUpBloc>().add(NameChangedEvent(value)),
+              context.read<SignUpBloc>().add(event(value)),
         ),
       ),
     ],
