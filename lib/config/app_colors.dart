@@ -9,5 +9,7 @@ class AppColors {
   static const Color chocolateColor = Color.fromARGB(162, 78, 41, 1);
   static const Color darkGreyColor = Color(0xFF212121);
   static const Color blueColor = Colors.blue;
+  static const Color limeGreenColor = Color(0x1A6FD866);
+
 
 }

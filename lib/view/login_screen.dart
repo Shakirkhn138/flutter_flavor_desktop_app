@@ -1,8 +1,11 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:practice_desktop_app/state/signup_bloc/signup_bloc.dart' hide EmailChangedEvent, PasswordChangedEvent;
+import 'package:practice_desktop_app/state/signup_bloc/signup_bloc.dart'
+    hide EmailChangedEvent, PasswordChangedEvent;
 
 import '../config/app_colors.dart';
+import '../config/window_buttons.dart';
 import '../state/login_bloc/login_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/images/side.png'),
                 Padding(
-                  padding: const EdgeInsets.only(left: 270.0,),
+                  padding: const EdgeInsets.only(left: 270.0),
                   child: Container(
                     height: MediaQuery.of(context).size.height * 0.68,
                     width: MediaQuery.of(context).size.width * 0.38,
@@ -47,9 +50,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        _buildTextField(context, _emailController, 'Email', 'Enter you email', EmailChangedEvent),
+                        _buildTextField(
+                          context,
+                          _emailController,
+                          'Email',
+                          'Enter you email',
+                          EmailChangedEvent,
+                        ),
                         SizedBox(height: 10),
-                        _buildTextField(context, _passwordController, 'Password', 'Enter your password', PasswordChangedEvent),
+                        _buildTextField(
+                          context,
+                          _passwordController,
+                          'Password',
+                          'Enter your password',
+                          PasswordChangedEvent,
+                        ),
                         SizedBox(height: 10),
                         SizedBox(
                           width: 400,
@@ -64,9 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
 
                                 fillColor:
-                                    MaterialStateProperty.resolveWith<
-                                      Color
-                                    >((Set<MaterialState> states) {
+                                    MaterialStateProperty.resolveWith<Color>((
+                                      Set<MaterialState> states,
+                                    ) {
                                       if (states.contains(
                                         MaterialState.selected,
                                       )) {
@@ -108,14 +123,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-
 Widget _buildTextField(
-    BuildContext context,
-    controller,
-    String title,
-    String text,
-    event,
-    ) {
+  BuildContext context,
+  controller,
+  String title,
+  String text,
+  event,
+) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -139,55 +153,44 @@ Widget _buildTextField(
               borderSide: BorderSide.none,
             ),
           ),
-          onChanged: (value) =>
-              context.read<LoginBloc>().add(event(value)),
+          onChanged: (value) => context.read<LoginBloc>().add(event(value)),
         ),
       ),
     ],
   );
 }
 
-Widget _buildSignIn (BuildContext context){
-  return  ElevatedButton(
+Widget _buildSignIn(BuildContext context) {
+  return ElevatedButton(
     onPressed: () {
-      context.read<LoginBloc>().add(
-        SubmitLoginEvent(),
-      );
+      context.read<LoginBloc>().add(SubmitLoginEvent());
+      Navigator.pushNamed(context, 'dashboard');
     },
     style: ElevatedButton.styleFrom(
       backgroundColor: AppColors.chocolateColor,
       foregroundColor: Colors.white,
       minimumSize: const Size(390, 44),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
     ),
     child: Text('Sign in'),
   );
 }
 
-Widget _buildGoogleSignIn (BuildContext context){
+Widget _buildGoogleSignIn(BuildContext context) {
   return SizedBox(
     width: 385,
     child: ElevatedButton(
       onPressed: () {
-        context.read<LoginBloc>().add(
-          GoogleLoginEvent(),
-        );
+        context.read<LoginBloc>().add(GoogleLoginEvent());
       },
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/images/google_icon.png',
-            height: 17,
-          ),
+          Image.asset('assets/images/google_icon.png', height: 17),
           SizedBox(width: 10),
           Text('Sign in with Google'),
         ],
@@ -196,22 +199,17 @@ Widget _buildGoogleSignIn (BuildContext context){
   );
 }
 
-Widget _buildAccount (BuildContext context){
+Widget _buildAccount(BuildContext context) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
       Text(
         'Don\'t have an account?',
-        style: TextStyle(
-          color: AppColors.darkGreyColor,
-        ),
+        style: TextStyle(color: AppColors.darkGreyColor),
       ),
       TextButton(
         onPressed: () => Navigator.pushNamed(context, 'signup'),
-        child: Text(
-          'Sign up',
-          style: TextStyle(color: Colors.blue),
-        ),
+        child: Text('Sign up', style: TextStyle(color: Colors.blue)),
       ),
     ],
   );
