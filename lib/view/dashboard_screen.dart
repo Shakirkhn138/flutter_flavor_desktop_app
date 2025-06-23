@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:practice_desktop_app/state/dashboard_header/dashboard_header_bloc.dart';
 import '../config/app_colors.dart';
+import '../state/customer_review_bloc/customer_review_bloc.dart';
 import '../state/inventory_summary/inventory_summary_bloc.dart';
+import '../state/last_order_bloc/last_order_bloc.dart';
 import '../state/product_summary_bloc/product_summary_bloc.dart';
 import '../state/purchase_overview/purchase_overview_bloc.dart';
 import '../state/sales_overview/sales_overview_bloc.dart';
@@ -23,627 +25,661 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) =>
-          DashboardHeaderBloc()
-            ..add(AddHeader()),
+          create: (context) => DashboardHeaderBloc()..add(AddHeader()),
+        ),
+        BlocProvider(
+          create: (context) => SalesOverviewBloc()..add(LoadSales()),
         ),
         BlocProvider(
           create: (context) =>
-          SalesOverviewBloc()
-            ..add(LoadSales()),
+              InventorySummaryBloc()..add(LoadInventorySummary()),
         ),
         BlocProvider(
           create: (context) =>
-          InventorySummaryBloc()
-            ..add(LoadInventorySummary()),
+              PurchaseOverviewBloc()..add(LoadPurchaseOverview()),
         ),
         BlocProvider(
-          create: (context) =>
-          PurchaseOverviewBloc()
-            ..add(LoadPurchaseOverview()),
+          create: (context) => ProductSummaryBloc()..add(LoadProductSummary()),
         ),
         BlocProvider(
-          create: (context) =>
-          ProductSummaryBloc()
-            ..add(LoadProductSummary()),
+          create: (context) => SellingItemBloc()..add(LoadSellingItem()),
         ),
-        BlocProvider(
-          create: (context) =>
-          SellingItemBloc()
-            ..add(LoadSellingItem()),
-        ),
+        BlocProvider(create: (context) => LastOrderBloc()..add(LoadOrder())),
+        BlocProvider(create: (context) => CustomerReviewBloc()..add(LoadCustomerReview())),
       ],
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final double screenWidth = constraints.maxWidth;
-
-          return Scaffold(
-            key: scaffoldKey,
-            appBar: AppBar(
-              leading: IconButton(
-                onPressed: () {
-                  scaffoldKey.currentState?.openDrawer();
-                },
-                icon: const Icon(Icons.menu),
-              ),
-              title: const Text("Dashboard"),
+      child: Scaffold(
+        key: scaffoldKey,
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {
+              scaffoldKey.currentState?.openDrawer();
+            },
+            icon: const Icon(Icons.menu),
+          ),
+          title: const Text("Dashboard"),
+        ),
+        drawer: Drawer(
+          child: ListView(
+            children: [
+              const DrawerHeader(child: Text('Menu')),
+              const ListTile(title: Text('Dashboard')),
+              const ListTile(title: Text('Orders')),
+              const ListTile(title: Text('Delivery')),
+              const ListTile(title: Text('Customer')),
+              ListTile(title: const Text('Menu'), onTap: () => Navigator.pushNamed(context, 'menu'),),
+              const ListTile(title: Text('Analytics')),
+              const ListTile(title: Text('Payments')),
+              const ListTile(title: Text('Inventory')),
+              const ListTile(title: Text('Setting')),
+              const ListTile(title: Text('Report')),
+              const ListTile(title: Text('Log Out')),
+            ],
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                if (constraints.maxWidth > 1000) {
+                  return Column(
+                    children: [
+                      _buildHeader(),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          _buildSalesOverview(),
+                          _buildInventorySummary(),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          _buildPurchaseOverview(),
+                          _buildProductSummary(),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Row(children: [_buildLineChart(), _buildSellingItem()]),
+                      SizedBox(height: 20),
+                      Row(children: [_buildBarChart(), _buildLastOrder()]),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Align(alignment: Alignment.topLeft, child: Text('Customer Review', style: TextStyle(fontSize: 20),)),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      _buildCustomerReview(),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
-            drawer: Drawer(
-              child: ListView(
-                children: const [
-                  DrawerHeader(child: Text('Menu')),
-                  ListTile(title: Text('Dashboard')),
-                  ListTile(title: Text('Orders')),
-                  ListTile(title: Text('Delivery')),
-                  ListTile(title: Text('Customer')),
-                  ListTile(title: Text('Menu')),
-                  ListTile(title: Text('Analytics')),
-                  ListTile(title: Text('Payments')),
-                  ListTile(title: Text('Inventory')),
-                  ListTile(title: Text('Setting')),
-                  ListTile(title: Text('Report')),
-                  ListTile(title: Text('Log Out')),
-                ],
-              ),
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    BlocBuilder<DashboardHeaderBloc, DashboardHeaderState>(
-                      builder: (context, state) {
-                        if (state is HeaderLoading) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        } else if (state is HeaderLoaded) {
-                          return SizedBox(
-                            height: 160,
-                            width: double.infinity,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: state.headers.map((header) {
-                                  return Container(
-                                    width: 272,
-                                    margin: const EdgeInsets.only(right: 16),
-                                    child: Card(
-                                      elevation: 4,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                              MainAxisAlignment
-                                                  .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  header.title,
-                                                  style: const TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  '\$${header.profit}',
-                                                  style: const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                Text(header.profitOrLoss),
-                                              ],
-                                            ),
-                                            Container(
-                                              width: 49,
-                                              height: 49,
-                                              decoration: BoxDecoration(
-                                                color: AppColors.limeGreenColor,
-                                                borderRadius:
-                                                BorderRadius.circular(10),
-                                              ),
-                                              child: Center(
-                                                child: Icon(header.icon),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-
-                    // BlocBuilder<SalesOverviewBloc, SalesOverviewState>(
-                    //   builder: (context, state) {
-                    //     if (state is SalesLoading) {
-                    //       return const Expanded(
-                    //         child: Center(child: CircularProgressIndicator()),
-                    //       );
-                    //     } else if (state is SalesLoaded) {
-                    //       return SizedBox(
-                    //         height: 150,
-                    //         width: 1000,
-                    //
-                    //         child: ListView.builder(
-                    //           itemCount: state.sales.length,
-                    //           scrollDirection: Axis.horizontal,
-                    //           itemBuilder: (context, index) {
-                    //             final sale = state.sales[index];
-                    //             return Container(
-                    //               width: 130,
-                    //               decoration: BoxDecoration(
-                    //                 color: Colors.white,
-                    //                 borderRadius: BorderRadius.circular(10)
-                    //               ),
-                    //               margin: const EdgeInsets.symmetric(vertical: 8),
-                    //               child: Column(
-                    //                 mainAxisAlignment: MainAxisAlignment.center,
-                    //                 children: [
-                    //                   Icon(sale.icon),
-                    //                   Row(
-                    //                     mainAxisAlignment: MainAxisAlignment.center,
-                    //                     children: [
-                    //                       Text(sale.money.toString()),
-                    //                       Spacer(),
-                    //                       Text(sale.title),
-                    //                       SizedBox(
-                    //                         height: 60,
-                    //                         child: VerticalDivider(
-                    //                           color: Colors.grey,
-                    //                           thickness: 2,
-                    //                         ),
-                    //                       ),
-                    //
-                    //                     ],
-                    //                   ),
-                    //
-                    //                 ],
-                    //               )
-                    //             );
-                    //           },
-                    //         ),
-                    //       );
-                    //     } else if (state is SalesError) {
-                    //       return const Expanded(
-                    //         child: Center(child: Text('Failed to load sales data')),
-                    //       );
-                    //     }
-                    //     return const SizedBox.shrink();
-                    //   },
-                    // ),
-                    SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Container(
-                            width: 650,
-                            height: 90,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 150,
-                                  child: Column(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.limeGreenColor,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Icon(Icons.add),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Text('\$ 832'),
-                                          Text('Sales'),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 60,
-                                  child: VerticalDivider(
-                                    thickness: 2,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 150,
-                                  child: Column(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.limeGreenColor,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Icon(Icons.add),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Text('\$ 832'),
-                                          Text('Revenue'),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 60,
-                                  child: VerticalDivider(
-                                    thickness: 2,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 150,
-                                  child: Column(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.limeGreenColor,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Icon(Icons.add),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Text('\$ 832'),
-                                          Text('Profit'),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 60,
-                                  child: VerticalDivider(
-                                    thickness: 2,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 150,
-                                  child: Column(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.limeGreenColor,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Icon(Icons.add),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Text('\$ 832'),
-                                          Text('Cost'),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        BlocBuilder<
-                            InventorySummaryBloc,
-                            InventorySummaryState
-                        >(
-                          builder: (context, state) {
-                            if (State is InventorySummaryLoading) {
-                              return Center(child: CircularProgressIndicator());
-                            } else if (state is InventorySummaryLoaded) {
-                              return Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  children: [
-                                    _buildSummaryCard(
-                                      icon: Icons.inventory_2_outlined,
-                                      iconColor: Colors.orange,
-                                      label: 'Quantity in hand',
-                                      value: state.summary.quantitativeInHand
-                                          .toString(),
-                                    ),
-                                    _buildSummaryCard(
-                                      icon: Icons.local_shipping_outlined,
-                                      iconColor: Colors.deepPurple,
-                                      label: 'To be received',
-                                      value: state.summary.toBeReceived
-                                          .toString(),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            return SizedBox.shrink();
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Container(
-                            width: 650,
-                            height: 135,
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                BlocBuilder<PurchaseOverviewBloc, PurchaseOverviewState>(
-                                  builder: (context, state) {
-                                    if (state is PurchaseOverviewLoading) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    } else if (state
-                                    is PurchaseOverviewLoaded) {
-                                      return Column(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Purchase Overview',
-                                            style: TextStyle(fontSize: 20),
-                                          ),
-                                          SizedBox(height: 20),
-                                          Row(
-                                            children: [
-                                              _buildPurchaseCard(
-                                                Colors.blue.shade50,
-                                                Icons.shopping_bag_outlined,
-                                                state.purchase.purchase
-                                                    .toString(),
-                                                'Purchase',
-                                              ),
-                                              SizedBox(
-                                                height: 60,
-                                                child: VerticalDivider(
-                                                  thickness: 1.5,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              _buildPurchaseCard(
-                                                Colors.green.shade50,
-                                                Icons.currency_rupee,
-                                                '\$${state.purchase.cost}',
-                                                'Cost',
-                                              ),
-                                              SizedBox(
-                                                height: 60,
-                                                child: VerticalDivider(
-                                                  thickness: 1.5,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              _buildPurchaseCard(
-                                                Colors.deepPurple.shade50,
-                                                Icons
-                                                    .cancel_presentation_outlined,
-                                                state.purchase.cancel
-                                                    .toString(),
-                                                'Cancel',
-                                              ),
-                                              SizedBox(
-                                                height: 60,
-                                                child: VerticalDivider(
-                                                  thickness: 1.5,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              _buildPurchaseCard(
-                                                Colors.orange.shade50,
-                                                Icons.backpack_sharp,
-                                                '\$${state.purchase.sendBack}',
-                                                'Return',
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      );
-                                    }
-                                    return SizedBox.shrink();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 460,
-                          height: 139,
-                          margin: EdgeInsets.only(left: 20),
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              BlocBuilder<
-                                  ProductSummaryBloc,
-                                  ProductSummaryState
-                              >(
-                                builder: (context, state) {
-                                  if (state is ProductSummaryLoading) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  } else if (state is ProductSummaryLoaded) {
-                                    return Column(
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Product Summary',
-                                          style: TextStyle(fontSize: 20),
-                                        ),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          children: [
-                                            _buildProductCard(
-                                              Colors.blue.shade50,
-                                              Icons.person_2_outlined,
-                                              state.product.numberOfCategory
-                                                  .toString(),
-                                              'Number of category',
-                                            ),
-                                            SizedBox(
-                                              height: 80,
-                                              child: VerticalDivider(
-                                                thickness: 1.5,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                            _buildProductCard(
-                                              Colors.purple.shade50,
-                                              Icons.fact_check,
-                                              state.product.numberOfSuppliers
-                                                  .toString(),
-                                              'Number of Suppliers',
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  }
-                                  return SizedBox.shrink();
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Container(
-                          color: Colors.blue.shade50,
-                          width: 864,
-                          height: 330,
-                          child: const Center(child: Text('Line Chart')),
-                        ),
-                        Container(
-                          width: 250,
-                          height: 330,
-                          margin: EdgeInsets.only(left: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10)
-                          ),
-                          child: BlocBuilder<SellingItemBloc, SellingItemState>(
-                            builder: (context, state) {
-                              if (state is SellingItemLoading) {
-                                return const Center(child: CircularProgressIndicator());
-                              } else if (state is SellingItemLoaded) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 20, left: 10, right: 10, bottom: 10),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text('Top Selling Item', style: TextStyle(fontSize: 18)),
-                                      const Text(
-                                        'The top ordered menu\nthis week',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Expanded(
-                                        child: ListView.builder(
-                                          itemCount: state.items.length,
-                                          itemBuilder: (ctx, index) {
-                                            final item = state.items[index];
-                                            return Padding(
-                                              padding: const EdgeInsets.only(top: 20,),
-                                              child: Row(
-                                                children: [
-                                                  CircleAvatar(
-                                                    backgroundImage: NetworkImage(item.image),
-                                                    radius: 18,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(item.title, style: TextStyle(fontSize: 16),),
-                                                  Spacer(),
-                                                  Text(item.itemsSell.toString(), style: TextStyle(fontSize: 16),),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          ),
-                        ),
-                      ],
-                    )
-
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
+}
+
+Widget _buildHeader() {
+  return BlocBuilder<DashboardHeaderBloc, DashboardHeaderState>(
+    builder: (context, state) {
+      if (state is HeaderLoading) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (state is HeaderLoaded) {
+        return SizedBox(
+          height: 160,
+          width: double.infinity,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: state.headers.map((header) {
+                return Container(
+                  width: 272,
+                  margin: const EdgeInsets.only(right: 16),
+                  child: Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                header.title,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                '\$${header.profit}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(header.profitOrLoss),
+                            ],
+                          ),
+                          Container(
+                            width: 49,
+                            height: 49,
+                            decoration: BoxDecoration(
+                              color: AppColors.limeGreenColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(child: Icon(header.icon)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    },
+  );
+}
+
+Widget _buildSalesOverview() {
+  return Align(
+    alignment: Alignment.topLeft,
+    child: Container(
+      width: 650,
+      height: 90,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.limeGreenColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(Icons.add),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [Text('\$ 832'), Text('Sales')],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 60,
+            child: VerticalDivider(thickness: 2, color: Colors.grey),
+          ),
+          SizedBox(
+            width: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.limeGreenColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(Icons.add),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [Text('\$ 832'), Text('Revenue')],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 60,
+            child: VerticalDivider(thickness: 2, color: Colors.grey),
+          ),
+          SizedBox(
+            width: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.limeGreenColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(Icons.add),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [Text('\$ 832'), Text('Profit')],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 60,
+            child: VerticalDivider(thickness: 2, color: Colors.grey),
+          ),
+          SizedBox(
+            width: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.limeGreenColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(Icons.add),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [Text('\$ 832'), Text('Cost')],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildInventorySummary() {
+  return BlocBuilder<InventorySummaryBloc, InventorySummaryState>(
+    builder: (context, state) {
+      if (State is InventorySummaryLoading) {
+        return Center(child: CircularProgressIndicator());
+      } else if (state is InventorySummaryLoaded) {
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              _buildSummaryCard(
+                icon: Icons.inventory_2_outlined,
+                iconColor: Colors.orange,
+                label: 'Quantity in hand',
+                value: state.summary.quantitativeInHand.toString(),
+              ),
+              _buildSummaryCard(
+                icon: Icons.local_shipping_outlined,
+                iconColor: Colors.deepPurple,
+                label: 'To be received',
+                value: state.summary.toBeReceived.toString(),
+              ),
+            ],
+          ),
+        );
+      }
+      return SizedBox.shrink();
+    },
+  );
+}
+
+Widget _buildPurchaseOverview() {
+  return Align(
+    alignment: Alignment.topLeft,
+    child: Container(
+      width: 650,
+      height: 135,
+      padding: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BlocBuilder<PurchaseOverviewBloc, PurchaseOverviewState>(
+            builder: (context, state) {
+              if (state is PurchaseOverviewLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is PurchaseOverviewLoaded) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Purchase Overview', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 20),
+                    Row(
+                      children: [
+                        _buildPurchaseCard(
+                          Colors.blue.shade50,
+                          Icons.shopping_bag_outlined,
+                          state.purchase.purchase.toString(),
+                          'Purchase',
+                        ),
+                        SizedBox(
+                          height: 60,
+                          child: VerticalDivider(
+                            thickness: 1.5,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        _buildPurchaseCard(
+                          Colors.green.shade50,
+                          Icons.currency_rupee,
+                          '\$${state.purchase.cost}',
+                          'Cost',
+                        ),
+                        SizedBox(
+                          height: 60,
+                          child: VerticalDivider(
+                            thickness: 1.5,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        _buildPurchaseCard(
+                          Colors.deepPurple.shade50,
+                          Icons.cancel_presentation_outlined,
+                          state.purchase.cancel.toString(),
+                          'Cancel',
+                        ),
+                        SizedBox(
+                          height: 60,
+                          child: VerticalDivider(
+                            thickness: 1.5,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        _buildPurchaseCard(
+                          Colors.orange.shade50,
+                          Icons.backpack_sharp,
+                          '\$${state.purchase.sendBack}',
+                          'Return',
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }
+              return SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildProductSummary() {
+  return Container(
+    width: 460,
+    height: 139,
+    margin: EdgeInsets.only(left: 20),
+    padding: EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      children: [
+        BlocBuilder<ProductSummaryBloc, ProductSummaryState>(
+          builder: (context, state) {
+            if (state is ProductSummaryLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is ProductSummaryLoaded) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Product Summary', style: TextStyle(fontSize: 20)),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _buildProductCard(
+                        Colors.blue.shade50,
+                        Icons.person_2_outlined,
+                        state.product.numberOfCategory.toString(),
+                        'Number of category',
+                      ),
+                      SizedBox(
+                        height: 80,
+                        child: VerticalDivider(
+                          thickness: 1.5,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      _buildProductCard(
+                        Colors.purple.shade50,
+                        Icons.fact_check,
+                        state.product.numberOfSuppliers.toString(),
+                        'Number of Suppliers',
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+            return SizedBox.shrink();
+          },
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildLineChart() {
+  return Container(
+    color: Colors.blue.shade50,
+    width: 864,
+    height: 330,
+    child: const Center(child: Text('Line Chart')),
+  );
+}
+
+Widget _buildSellingItem() {
+  return Container(
+    width: 250,
+    height: 330,
+    margin: EdgeInsets.only(left: 20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: BlocBuilder<SellingItemBloc, SellingItemState>(
+      builder: (context, state) {
+        if (state is SellingItemLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is SellingItemLoaded) {
+          return Padding(
+            padding: const EdgeInsets.only(
+              top: 20,
+              left: 10,
+              right: 10,
+              bottom: 10,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Top Selling Item', style: TextStyle(fontSize: 18)),
+                const Text(
+                  'The top ordered menu\nthis week',
+                  style: TextStyle(color: Colors.red),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: state.items.length,
+                    itemBuilder: (ctx, index) {
+                      final item = state.items[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: AssetImage(
+                                'assets/images/pizza.jpg',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(item.title, style: TextStyle(fontSize: 16)),
+                            Spacer(),
+                            Text(
+                              item.itemsSell.toString(),
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    ),
+  );
+}
+
+Widget _buildBarChart() {
+  return Container(
+    color: Colors.blue.shade50,
+    width: 568,
+    height: 320,
+    child: const Center(child: Text('Bar Chart')),
+  );
+}
+
+Widget _buildLastOrder() {
+  return Container(
+    width: 560,
+    height: 300,
+    margin: EdgeInsets.only(left: 20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: BlocBuilder<LastOrderBloc, LastOrderState>(
+      builder: (context, state) {
+        if (state is LastOrderLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is LastOrderLoaded) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Last Orders', style: TextStyle(fontSize: 20)),
+                    TextButton(onPressed: () {}, child: Text('View All')),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: DataTable(
+                  columns: [
+                    DataColumn(label: Text('Order ID')),
+                    DataColumn(label: Text('O.Time')),
+                    DataColumn(label: Text('Location')),
+                    DataColumn(label: Text('Status')),
+                  ],
+                  rows: state.orders.map((order) {
+                    return DataRow(
+                      cells: [
+                        DataCell(Text('#${order.orderId}')),
+                        DataCell(Text(order.orderTime)),
+                        DataCell(Text(order.location)),
+                        DataCell(Text(order.status)),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    ),
+  );
+}
+
+Widget _buildCustomerReview() {
+  return  BlocBuilder<CustomerReviewBloc, CustomerReviewState>(
+      builder: (context, state) {
+        if (state is CustomerReviewLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is CustomerReviewLoaded) {
+          return Container(
+            height: 226,
+            child: ListView.builder(
+              itemCount: state.customerReviews.length,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (ctx, index) {
+                final review = state.customerReviews[index];
+                return Container(
+                  width: 402,
+                  margin: EdgeInsets.only(right: 10),
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10)
+                  ),
+                  child: Column(children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundImage: AssetImage(review.image),
+                        ),
+                        SizedBox(
+                          height: 50,
+                          child: VerticalDivider(
+                            thickness: 2,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(review.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                            Text(review.location, style: TextStyle(color: Colors.orange, fontSize: 18),),
+                            Row(
+                              children: List.generate(5, (index) {
+                                return Container(
+                                  child: Icon(Icons.star, color: Colors.orange, size: 18,),
+                                );
+                              },),
+                            )
+                          ],
+                        ),
+                        Spacer(),
+                        Icon(Icons.timer_sharp, color: Colors.orange,),
+                        Text(review.date)
+                    ],
+                  ),
+                    SizedBox(
+                      height: 30,
+                    ),
+                    Text(review.comment, textAlign: TextAlign.start,)
+                    ]),
+                );
+              },
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+
+  );
 }
 
 Widget _buildSummaryCard({
@@ -679,10 +715,12 @@ Widget _buildSummaryCard({
   );
 }
 
-Widget _buildPurchaseCard(Color color,
-    IconData icon,
-    String value,
-    String title,) {
+Widget _buildPurchaseCard(
+  Color color,
+  IconData icon,
+  String value,
+  String title,
+) {
   return Container(
     margin: EdgeInsets.only(left: 20),
     width: 120,
@@ -718,10 +756,12 @@ Widget _buildPurchaseCard(Color color,
   );
 }
 
-Widget _buildProductCard(Color color,
-    IconData icon,
-    String value,
-    String title,) {
+Widget _buildProductCard(
+  Color color,
+  IconData icon,
+  String value,
+  String title,
+) {
   return SizedBox(
     width: 210,
     child: Column(

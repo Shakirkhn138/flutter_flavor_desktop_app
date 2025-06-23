@@ -55,7 +55,7 @@ void mainCommon(AppConfig config) {
 
   doWhenWindowReady(() {
     const initialSize = Size(1200, 800);
-    appWindow.minSize = initialSize;
+    appWindow.minSize = Size(600, 400);
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
     appWindow.title = config.appName;

@@ -14,9 +14,9 @@ class SellingItemBloc extends Bloc<SellingItemEvent, SellingItemState> {
   
   void _loadItem (LoadSellingItem event, Emitter<SellingItemState> emit){
     final List<SellingItemModel> SellingItem = [
-      SellingItemModel(image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg', title: 'Cheese burger', itemsSell: 150),
-      SellingItemModel(image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg', title: 'Pizza Peperoni', itemsSell: 8),
-      SellingItemModel(image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg', title: 'Pizza Steak', itemsSell: 34),
+      SellingItemModel(image: 'https://images.pexels.com/photos/1049626/pexels-photo-1049626.jpeg', title: 'Cheese burger', itemsSell: 150),
+      SellingItemModel(image: 'https://images.pexels.com/photos/1049626/pexels-photo-1049626.jpeg', title: 'Pizza Peperoni', itemsSell: 8),
+      SellingItemModel(image: 'https://images.pexels.com/photos/1049626/pexels-photo-1049626.jpeg', title: 'Pizza Steak', itemsSell: 34),
     ];
     emit(SellingItemLoaded(SellingItem));
   }
