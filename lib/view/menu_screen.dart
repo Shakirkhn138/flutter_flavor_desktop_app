@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../config/app_colors.dart';
+import '../state/image_menu_bloc/image_menu_bloc.dart';
 import '../state/menu_category_bloc/menu_category_bloc.dart';
 import '../state/menu_dish_bloc/menu_dish_bloc.dart';
+import '../state/other_menu_bloc/other_menu_bloc.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
 
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -16,8 +24,25 @@ class MenuScreen extends StatelessWidget {
           create: (context) => MenuCategoryBloc()..add(LoadMenuCategory()),
         ),
         BlocProvider(create: (context) => MenuDishBloc()),
+        BlocProvider(
+          create: (context) => OtherMenuBloc()..add(LoadOtherMenu()),
+        ),
+        BlocProvider(
+          create: (context) => ImageMenuBloc()..add(LoadImageMenu()),
+        ),
       ],
       child: Scaffold(
+        key: scaffoldKey,
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {
+              scaffoldKey.currentState?.openDrawer();
+            },
+            icon: const Icon(Icons.menu),
+          ),
+          title: const Text("Menu"),
+        ),
+        drawer: _buildDrawer(context),
         body: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
@@ -32,10 +57,13 @@ class MenuScreen extends StatelessWidget {
                       _buildContainer(),
                       SizedBox(height: 20),
                       _buildDishesList(),
+                      SizedBox(height: 20),
+                      _buildWhatInMind(),
                     ],
                   ),
                 ),
               ),
+              _buildSideColumns(),
             ],
           ),
         ),
@@ -328,20 +356,63 @@ Widget _buildDishesList() {
                             ),
                           ],
                         ),
-                        // BlocBuilder<MenuDishBloc, MenuDishState>(
-                        //   builder: (context, state) {
-                        //     return ListView.builder(
-                        //       itemCount: state.currentTab.dishes.length,
-                        //       shrinkWrap: true,
-                        //       physics: NeverScrollableScrollPhysics(),
-                        //       itemBuilder: (ctx, index) {
-                        //         final dish = state.currentTab.dishes[index];
-                        //         return Column(children: [
-                        //           Text(dish.name)]);
-                        //       },
-                        //     );
-                        //   },
-                        // ),
+                        SizedBox(
+                          height: 170,
+                          child: BlocBuilder<MenuDishBloc, MenuDishState>(
+                            builder: (context, state) {
+                              return ListView.builder(
+                                itemCount: state.currentTab.dishes.length,
+                                // shrinkWrap: true,
+                                // physics: NeverScrollableScrollPhysics(),
+                                scrollDirection: Axis.horizontal,
+                                itemBuilder: (ctx, index) {
+                                  final dish = state.currentTab.dishes[index];
+                                  return Container(
+                                    width: 107,
+                                    margin: EdgeInsets.only(left: 10),
+                                    child: Column(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadiusGeometry.circular(10),
+                                          child: Image.asset(
+                                            dish.image,
+                                            height: 101,
+                                            width: 101,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Text(
+                                          dish.name,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(dish.mins.toString()),
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.star,
+                                                  color: Colors.green,
+                                                ),
+                                                Text(dish.rating.toString()),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -352,5 +423,326 @@ Widget _buildDishesList() {
         },
       ),
     ],
+  );
+}
+
+Widget _buildSideColumns() {
+  return Container(
+    width: 356,
+    color: Colors.white,
+    padding: EdgeInsets.all(10),
+    child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Your Balance', style: TextStyle(fontSize: 16)),
+          SizedBox(height: 20),
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              height: 138,
+              width: 331,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 132,
+                    height: 64,
+                    padding: EdgeInsets.only(left: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Balance', style: TextStyle(fontSize: 15)),
+                        Text(
+                          '\$12000',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 40),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 45,
+                        width: 45,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.transcribe_outlined),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text('Top Up'),
+                    ],
+                  ),
+                  SizedBox(width: 10),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 45,
+                        width: 45,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.transcribe_outlined),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text('Transfer'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 40),
+          Text('Your Address', style: TextStyle(color: Colors.grey)),
+          Row(
+            children: [
+              Icon(Icons.location_on),
+              Text(
+                'Elm, street 23',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              Spacer(),
+              SizedBox(
+                height: 38,
+                width: 110,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: Colors.orange),
+                    ),
+                  ),
+                  child: Center(child: Text('Change')),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20.0),
+            child: Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt. ',
+            ),
+          ),
+          SizedBox(height: 30),
+          Row(
+            children: [
+              SizedBox(
+                height: 38,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: Colors.orange),
+                    ),
+                  ),
+                  child: Center(child: Text('Add Details')),
+                ),
+              ),
+              SizedBox(width: 10),
+              SizedBox(
+                height: 38,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: Colors.orange),
+                    ),
+                  ),
+                  child: Center(child: Text('Add Note')),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 30),
+
+          Text(
+            'Other Menu',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 30),
+          BlocBuilder<OtherMenuBloc, OtherMenuState>(
+            builder: (context, state) {
+              if (state is OtherMenuLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is OtherMenuLoaded) {
+                return SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    itemCount: state.menus.length,
+                    itemBuilder: (ctx, index) {
+                      final menu = state.menus[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: AssetImage(menu.image),
+                        ),
+                        title: Text(
+                          menu.title,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text('x${menu.count}'),
+                        trailing: Text(
+                          '+\$${menu.price}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          SizedBox(height: 30),
+          Divider(endIndent: 10, indent: 10),
+          SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Service', style: TextStyle(color: Colors.grey)),
+              Text('+\$1.00', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total'),
+              Text('\$202.00', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              height: 64,
+              width: 319,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.orange
+                )
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Image.asset('assets/images/icon.png'),
+                  Text('Have a coupon code?'),
+                  Icon(Icons.arrow_forward_ios)
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              height: 64,
+              width: 319,
+              child: ElevatedButton(onPressed: (){},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.chocolateColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    )
+                  ),
+                  child: Text('Checkout')),
+            ),
+          )
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildWhatInMind() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('What\'s on your mind?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+      BlocBuilder<ImageMenuBloc, ImageMenuState>(
+          builder: (context, state) {
+            if (state is ImageMenuLoading){
+              return const Center(child: CircularProgressIndicator(),);
+            } else if (state is ImageMenuLoaded){
+              return SizedBox(
+                height: 120,
+                child: ListView.builder(
+                  itemCount: state.images.length,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (ctx, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 10.0),
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundImage: AssetImage(state.images[index].image),
+                      ),
+                    );
+                    }),
+              );
+            }
+            return const Center(child: CircularProgressIndicator(),);
+          },
+        ),
+    ],
+  );
+  
+}
+
+
+Widget _buildDrawer (BuildContext context){
+  return Drawer(
+    child: ListView(
+      children: [
+        const DrawerHeader(child: Text('Menu')),
+        const ListTile(title: Text('Dashboard')),
+        ListTile(title: const Text('Orders'), onTap: () => Navigator.pushNamed(context, 'order'),),
+        const ListTile(title: Text('Delivery')),
+        ListTile(title: const Text('Customer'), onTap: () => Navigator.pushNamed(context, 'customer'),),
+        ListTile(title: const Text('Menu'), onTap: () => Navigator.of(context).pop()),
+        ListTile(title: const Text('Analytics'), onTap: () => Navigator.pushNamed(context, 'analytics'),),
+        const ListTile(title: Text('Payments')),
+        const ListTile(title: Text('Inventory')),
+        const ListTile(title: Text('Setting')),
+        const ListTile(title: Text('Report')),
+        const ListTile(title: Text('Log Out')),
+      ],
+    ),
   );
 }

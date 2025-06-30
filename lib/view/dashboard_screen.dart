@@ -58,24 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           title: const Text("Dashboard"),
         ),
-        drawer: Drawer(
-          child: ListView(
-            children: [
-              const DrawerHeader(child: Text('Menu')),
-              const ListTile(title: Text('Dashboard')),
-              const ListTile(title: Text('Orders')),
-              const ListTile(title: Text('Delivery')),
-              const ListTile(title: Text('Customer')),
-              ListTile(title: const Text('Menu'), onTap: () => Navigator.pushNamed(context, 'menu'),),
-              const ListTile(title: Text('Analytics')),
-              const ListTile(title: Text('Payments')),
-              const ListTile(title: Text('Inventory')),
-              const ListTile(title: Text('Setting')),
-              const ListTile(title: Text('Report')),
-              const ListTile(title: Text('Log Out')),
-            ],
-          ),
-        ),
+        drawer: _buildDrawer(context),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -785,6 +768,28 @@ Widget _buildProductCard(
           ),
         ),
         Text(title, style: TextStyle(fontSize: 15)),
+      ],
+    ),
+  );
+}
+
+
+Widget _buildDrawer (BuildContext context){
+  return Drawer(
+    child: ListView(
+      children: [
+        const DrawerHeader(child: Text('Menu')),
+        ListTile(title: const Text('Dashboard'), onTap: () => Navigator.of(context).pop()),
+        ListTile(title: const Text('Orders'), onTap: () => Navigator.pushNamed(context, 'order'),),
+        const ListTile(title: Text('Delivery')),
+        ListTile(title: const Text('Customer'), onTap: () => Navigator.pushNamed(context, 'customer'),),
+        ListTile(title: const Text('Menu'), onTap: () => Navigator.pushNamed(context, 'menu'),),
+        ListTile(title: const Text('Analytics'), onTap: () => Navigator.pushNamed(context, 'analytics'),),
+        const ListTile(title: Text('Payments')),
+        const ListTile(title: Text('Inventory')),
+        const ListTile(title: Text('Setting')),
+        const ListTile(title: Text('Report')),
+        const ListTile(title: Text('Log Out')),
       ],
     ),
   );
