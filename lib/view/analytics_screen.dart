@@ -305,7 +305,7 @@ Widget _buildDrawer(BuildContext context) {
         ListTile(title: const Text('Analytics'), onTap: () => Navigator.of(context).pop()),
         const ListTile(title: Text('Payments')),
         const ListTile(title: Text('Inventory')),
-        const ListTile(title: Text('Setting')),
+        ListTile(title: const Text('Setting'), onTap: () => Navigator.pushNamed(context, 'setting'),),
         const ListTile(title: Text('Report')),
         const ListTile(title: Text('Log Out')),
       ],

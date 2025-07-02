@@ -8,6 +8,7 @@ import 'package:practice_desktop_app/view/dashboard_screen.dart';
 import 'package:practice_desktop_app/view/login_screen.dart';
 import 'package:practice_desktop_app/view/menu_screen.dart';
 import 'package:practice_desktop_app/view/orders_screen.dart';
+import 'package:practice_desktop_app/view/setting_screen.dart';
 import 'package:practice_desktop_app/view/singup_screen.dart';
 
 class AppRouters {
@@ -27,6 +28,8 @@ class AppRouters {
         return MaterialPageRoute(builder: (_) => AnalyticsScreen());
       case 'order':
         return MaterialPageRoute(builder: (_) => OrdersScreen());
+      case 'setting':
+        return MaterialPageRoute(builder: (_) => SettingScreen());
       default:
         return MaterialPageRoute(builder: (_) => LoginScreen());
     }

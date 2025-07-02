@@ -731,7 +731,7 @@ Widget _buildDrawer (BuildContext context){
     child: ListView(
       children: [
         const DrawerHeader(child: Text('Menu')),
-        const ListTile(title: Text('Dashboard')),
+        ListTile(title: const Text('Dashboard'), onTap: () => Navigator.pushNamed(context, 'dashboard'),),
         ListTile(title: const Text('Orders'), onTap: () => Navigator.pushNamed(context, 'order'),),
         const ListTile(title: Text('Delivery')),
         ListTile(title: const Text('Customer'), onTap: () => Navigator.pushNamed(context, 'customer'),),
@@ -739,7 +739,7 @@ Widget _buildDrawer (BuildContext context){
         ListTile(title: const Text('Analytics'), onTap: () => Navigator.pushNamed(context, 'analytics'),),
         const ListTile(title: Text('Payments')),
         const ListTile(title: Text('Inventory')),
-        const ListTile(title: Text('Setting')),
+        ListTile(title: const Text('Setting'), onTap: () => Navigator.pushNamed(context, 'setting'),),
         const ListTile(title: Text('Report')),
         const ListTile(title: Text('Log Out')),
       ],
